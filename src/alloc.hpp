@@ -20,6 +20,9 @@ public:
     [[nodiscard]] void* allocate(size_t size);
     void deallocate(void* p);
 
+    /// debug
+    void print_state();
+
 private:
     struct Header {
         void* addr;
