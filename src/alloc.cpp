@@ -1,5 +1,6 @@
 #include "alloc.hpp"
 
+#include <algorithm>
 #include <print>
 #include <stdexcept>
 #include <utility>
@@ -25,18 +26,6 @@ GC::Alloc::~Alloc() {
     std::free(heap);
 }
 
-GC::Alloc::ObjectList::iterator GC::Alloc::find(size_t size) {
-    auto it = free.begin();
-    while (it != free.end()) {
-        if (it->size >= size) {
-            return it;
-        }
-        ++it;
-    }
-
-    std::unreachable();
-}
-
 /**
  * If possible, shrinks node and adds the remainder to free as a free block.
  *
@@ -53,7 +42,7 @@ void GC::Alloc::split_if_possible(GC::Alloc::ObjectList::iterator node, size_t n
 
 void* GC::Alloc::allocate(size_t sz) {
     size_t size = sz + (MIN_SIZE - (sz % MIN_SIZE)) % MIN_SIZE;
-    auto block = find(size);
+    auto block = std::find_if(free.begin(), free.end(), [size](auto& x) { return x.size >= size; });
 
     std::println(
         "[ALLOC DBG] allocating:\n\trequired size {}\n\taligned size {}\n\tblock address: {}",
@@ -80,7 +69,9 @@ void* GC::Alloc::allocate(size_t sz) {
 void GC::Alloc::deallocate(void* p) {
     std::println("[ALLOC DBG] deallocating {}", p);
     print_state();
+
     auto block_it = allocated.find(p);
+
     std::println("\tblock_it:\n\t\taddr: {}\n\t\tsize: {}", block_it->first, block_it->second);
 
     if (block_it == allocated.end()) {
@@ -89,5 +80,6 @@ void GC::Alloc::deallocate(void* p) {
 
     free.push_back(Header{block_it->first, block_it->second});
     allocated.erase(p);
+
     print_state();
 }

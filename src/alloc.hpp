@@ -32,7 +32,6 @@ private:
     ObjectList free;
     size_t heap_size;
 
-    ObjectList::iterator find(size_t size);
     void split_if_possible(ObjectList::iterator node, size_t needed_size);
 };
 
