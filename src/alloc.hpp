@@ -18,7 +18,7 @@ public:
     static constexpr size_t MIN_SIZE = sizeof(void*) * 2;
 
     [[nodiscard]] void* allocate(size_t size);
-    void deallocate(void* p);
+    decltype(allocated)::iterator deallocate(void* p);
 
 private:
     struct Header {

@@ -102,21 +102,22 @@ ItOut GC::GCollector::GC_scan_registers(ItOut stack) {
     *(stack++) = (void*)R14;
     *(stack++) = (void*)R15;
 
-    *(stack++) = (void*)RAX;
-    *(stack++) = (void*)RCX;
-    *(stack++) = (void*)RDX;
-    *(stack++) = (void*)RSI;
-    *(stack++) = (void*)RDI;
-    *(stack++) = (void*)R8;
-    *(stack++) = (void*)R9;
-    *(stack++) = (void*)R10;
-    *(stack++) = (void*)R11;
+    // *(stack++) = (void*)RAX;
+    // *(stack++) = (void*)RCX;
+    // *(stack++) = (void*)RDX;
+    // *(stack++) = (void*)RSI;
+    // *(stack++) = (void*)RDI;
+    // *(stack++) = (void*)R8;
+    // *(stack++) = (void*)R9;
+    // *(stack++) = (void*)R10;
+    // *(stack++) = (void*)R11;
     return stack;
 }
 
 template <typename ItOut>
 ItOut GC::GCollector::GC_scan_stack(ItOut stack) {
-    void* stack_end = (void*)GET_REG(rsp);
+    // void* stack_end = (void*)GET_REG(rsp);
+    void* stack_end = __builtin_frame_address(0);
     void** array = static_cast<void**>(stack_begin);
 
     for (; array != stack_end; --array) {
@@ -145,9 +146,11 @@ void GC::GCollector::memory_dfs(m_stack& stack) {
 }
 
 void GC::GCollector::GC_sweep() {
-    for (auto&& [ptr, _] : allocator.allocated) {
-        if (!reachable[((char*)ptr - (char*)allocator.heap) / GC::Alloc::MIN_SIZE]) {
-            allocator.deallocate(ptr);
+    auto it = allocator.allocated.begin();
+
+    while (it != allocator.allocated.end()) {
+        if (!reachable[((char*)it->first - (char*)allocator.heap) / GC::Alloc::MIN_SIZE]) {
+            it = allocator.deallocate(it->first);
         }
     }
 }

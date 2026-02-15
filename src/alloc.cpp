@@ -77,7 +77,7 @@ void GC::Alloc::coalesce_with_next(GC::Alloc::ObjectList::iterator nd) {
     }
 }
 
-void GC::Alloc::deallocate(void* p) {
+decltype(GC::Alloc::allocated)::iterator GC::Alloc::deallocate(void* p) {
     DBG_STATE();
 
     auto block_it = allocated.find(p);
@@ -88,9 +88,12 @@ void GC::Alloc::deallocate(void* p) {
     auto next = std::find_if(
         free.begin(), free.end(), [block_it](auto& block) { return block.addr > block_it->first; });
     free.insert(next, Header{block_it->first, block_it->second});
-    allocated.erase(p);
+
+    auto ret = allocated.erase(allocated.find(p));
 
     coalesce_with_next(--next);
 
     DBG_STATE();
+
+    return ret;
 }

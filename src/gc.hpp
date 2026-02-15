@@ -32,6 +32,8 @@ namespace GC {
 
       void GC_run();
 
+      void GC_scan();
+
   public:
       GCollector() : allocator(HEAP_SIZE), allocations_count(0) {
           stack_begin = __builtin_frame_address(0);
