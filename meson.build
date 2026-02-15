@@ -24,4 +24,4 @@ example_src = [
   'example/avl.cpp',
   'example/test.cpp',
 ]
-executable('example', example_src, link_with: [runtime], dependencies: [dependency('gtest_main')])
+executable('example', example_src, link_with: [runtime])
