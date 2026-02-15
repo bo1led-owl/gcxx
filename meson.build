@@ -20,3 +20,8 @@ test_src = [
 
 executable('testt', test_src, link_with: [runtime])
 
+example_src = [
+  'example/avl.cpp',
+  'example/test.cpp',
+]
+executable('example', example_src, link_with: [runtime], dependencies: [dependency('gtest_main')])

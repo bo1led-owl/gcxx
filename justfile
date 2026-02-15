@@ -3,6 +3,9 @@ builddir := "./build"
 run: build
     ./{{builddir}}/testt
 
+example: build
+    ./{{builddir}}/example
+
 build:
     meson compile -C {{builddir}}
 
