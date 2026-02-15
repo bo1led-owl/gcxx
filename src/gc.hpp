@@ -1,28 +1,27 @@
-#include <stack>
-#include <deque>
 #include <bitset>
+#include <vector>
 
-#include "mallocator.hpp"
 #include "alloc.hpp"
+#include "mallocator.hpp"
 
-#define HEAP_SIZE 1 << 30;
-#define BITSET_SIZE static_cast<size_t>(HEAP_SIZE / GC::Alloc::MIN_SIZE);
+#define HEAP_SIZE 1 << 30
+#define BITSET_SIZE static_cast<size_t>(HEAP_SIZE / GC::Alloc::MIN_SIZE)
 
 namespace GC {
-  class GCollector {
+class GCollector {
     using uintptr = unsigned long;
     using uint = unsigned int;
-    using m_stack = std::stack<void*, std::deque<void*, MLC::Alloc<void*>>>;
+    using m_stack = std::vector<void*, MLC::Alloc<void*>>;
 
     GC::Alloc allocator;
     std::bitset<BITSET_SIZE> reachable;
     void* stack_begin;
     uint allocations_count;
 
-    template<std::output_iterator ItOut>
+    template <typename ItOut>
     ItOut GC_scan_registers(ItOut stack);
 
-    template <std::output_iterator ItOut>
+    template <typename ItOut>
     ItOut GC_scan_stack(ItOut stack);
 
     void memory_dfs(m_stack& stack);
@@ -31,26 +30,15 @@ namespace GC {
 
     void GC_scan();
 
-    public:
-
+public:
     GCollector() : allocator(HEAP_SIZE), allocations_count(0) {
-      stack_begin = __builtin_frame_address(0);
+        stack_begin = __builtin_frame_address(0);
     }
 
+    void* allocate(size_t size);
+    void deallocate(void* ptr);
+};
 
-    void* allocate(size_t size) {
-      allocations_count++;
-      if (allocations_count) { GC_scan(); }
-      return allocator.allocate(size);
-    }
+static GCollector instance;
 
-    void deallocate(void* ptr) {
-      allocator.deallocate(ptr);
-    }
-
-  }
-
-
-  static GCollector instance;
-
-} // namespace GarbageCollector
+}  // namespace GC

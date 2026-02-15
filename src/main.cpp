@@ -1,41 +1,35 @@
 #include <iostream>
 
-#include "alloc.hpp"
+#include "gc_new.hpp"
 
 struct Example {
-    int a;
+    int* a;
     int b;
     int c;
-
-    void print() {
-        std::cout << a << b << c << std::endl;
-    }
 };
 
+void memory_leak() {
+    void* bebebebebbeeb = GC::instance.allocate(502);
+}
+
+void another_memory_leak() {
+    Example* a = (Example*)GC::instance.allocate(100);
+}
+
+void foo() {
+    for (size_t i = 0; i < 10; i++) {
+        void* d = new int();
+    }
+}
+
 int main(void) {
-    auto gpa = GC::Alloc(4096);
-    Example* a = (Example*)gpa.allocate(sizeof(Example));
-    a->a = 1;
-    a->b = 2;
-    a->c = 3;
-    Example* b = (Example*)gpa.allocate(sizeof(Example));
-    b->a = 4;
-    b->b = 5;
-    b->c = 6;
-    Example* c = (Example*)gpa.allocate(sizeof(Example));
-    c->a = 7;
-    c->b = 8;
-    c->c = 9;
+    void* a = GC::instance.allocate(4);
+    memory_leak();
+    void* b = GC::instance.allocate(1022);
+    another_memory_leak();
+    foo();
 
-    std::cout << "all allocated\n";
-
-    a->print();
-    b->print();
-    c->print();
-
-    gpa.deallocate(b);
-    gpa.deallocate(c);
-    gpa.deallocate(a);
+    void* c = GC::instance.allocate(1000);
 
     return 0;
 }

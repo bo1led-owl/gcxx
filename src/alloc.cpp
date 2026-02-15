@@ -81,7 +81,6 @@ void GC::Alloc::deallocate(void* p) {
     DBG_STATE();
 
     auto block_it = allocated.find(p);
-
     if (block_it == allocated.end()) {
         throw std::invalid_argument("Trying to deallocate never-allocated pointer!");
     }

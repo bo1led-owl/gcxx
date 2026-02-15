@@ -4,7 +4,8 @@ project('gcxx', 'cpp', default_options : [
 ])
 
 lib_src = [
-  'src/alloc.cpp'
+  'src/alloc.cpp',
+  'src/gc.cpp',
 ]
 
 if get_option('buildtype') == 'debug'
