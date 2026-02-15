@@ -3,18 +3,22 @@
 #include <algorithm>
 #include <cstdio>
 #include <stdexcept>
-#include <utility>
 
-void GC::Alloc::print_state() {
-    std::puts("\tfree:");
-    for (auto block : free) {
-        std::printf("\t\taddr: %p\n\t\tsize: %lu", block.addr, block.size);
+#ifdef DEBUG
+#define DBG_STATE()                                                           \
+    {                                                                         \
+        std::puts("free:");                                                   \
+        for (auto block : free) {                                             \
+            std::printf("\taddr: %p\n\tsize: %lu\n", block.addr, block.size); \
+        }                                                                     \
+        std::puts("\tallocated:");                                            \
+        for (auto e : allocated) {                                            \
+            std::printf("\taddr: %p\n\tsize: %lu\n", e.first, e.second);      \
+        }                                                                     \
     }
-    std::puts("\tallocated:");
-    for (auto e : allocated) {
-        std::printf("\t\taddr: %p\n\t\tsize: %lu", e.first, e.second);
-    }
-}
+#else
+#define DBG_STATE() (void*)0;
+#endif
 
 GC::Alloc::Alloc(size_t size_bytes) : heap_size(size_bytes) {
     heap = std::malloc(heap_size);
@@ -43,7 +47,7 @@ void* GC::Alloc::allocate(size_t sz) {
     size_t size = sz + (MIN_SIZE - (sz % MIN_SIZE)) % MIN_SIZE;
     auto block = std::find_if(free.begin(), free.end(), [size](auto& x) { return x.size >= size; });
 
-    print_state();
+    DBG_STATE();
     if (block == free.end()) {
         return nullptr;
     }
@@ -54,7 +58,7 @@ void* GC::Alloc::allocate(size_t sz) {
     split_if_possible(block, size);
     free.erase(block);
 
-    print_state();
+    DBG_STATE();
     return addr;
 }
 
@@ -74,7 +78,7 @@ void GC::Alloc::coalesce_with_next(GC::Alloc::ObjectList::iterator nd) {
 }
 
 void GC::Alloc::deallocate(void* p) {
-    print_state();
+    DBG_STATE();
 
     auto block_it = allocated.find(p);
 
@@ -89,5 +93,5 @@ void GC::Alloc::deallocate(void* p) {
 
     coalesce_with_next(--next);
 
-    print_state();
+    DBG_STATE();
 }
