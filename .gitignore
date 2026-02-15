@@ -1,2 +1,10 @@
 build
 .cache
+*.aux
+*.log
+*.minted
+*.nav
+*.out
+*.vrb
+*.toc
+*.snm

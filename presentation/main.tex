@@ -1,0 +1,193 @@
+\documentclass[xcolor=dvipsnames,aspectratio=169]{beamer}
+
+\usepackage{cmap}
+\usepackage{minted}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{svg}
+\usepackage{tikz}
+
+\definecolor{bgcolor}{RGB}{20, 19, 17}
+
+\setbeamertemplate{navigation symbols}{}
+\usetheme{moloch}
+\setbeamercolor{frametitle}{fg=White,bg=bgcolor}
+
+\definecolor{selectionred}{RGB}{188, 70, 42}
+
+\definecolor{intellect}{RGB}{91, 102, 132}
+\definecolor{psyche}{RGB}{160, 154, 188}
+\definecolor{physique}{RGB}{132, 41, 54}
+\definecolor{motorics}{RGB}{203, 163, 60}
+
+\usepackage{fontspec}
+\setmainfont{Dobra-Medium}
+\setsansfont{Dobra-Medium}
+
+\newfontfamily\blackfont{Dobra-Black}
+
+\title{\blackfont GCXX}
+\date{}
+
+\begin{document}
+
+\addtocounter{framenumber}{-1}
+{
+\setbeamertemplate{footline}{} 
+\frame{\titlepage}
+}
+
+\begin{frame}
+\frametitle{GC: what is needed?}
+
+\begin{itemize}
+\item Allocator
+\item Mark
+\item Sweep
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Allocator}
+
+\begin{columns}
+\begin{column}{0.6\textwidth}
+  The whole API:
+  \begin{minted}{cpp}
+std::map<void*, size_t> allocated;
+void* heap;
+static constexpr size_t MIN_SIZE =
+  sizeof(void*) * 2;
+
+[[nodiscard]] void* allocate(size_t size);
+void deallocate(void* p);
+  \end{minted}
+\end{column}
+\begin{column}{0.4\textwidth}
+  \includegraphics[width=\linewidth]{images/puddle.jpg}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Mark}
+
+Find all reachable objects.
+
+Search begins with GC roots, i.e.
+\begin{itemize}
+\item Globals
+\item Registers
+\item Stack
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{GC roots}
+
+\begin{columns}
+\begin{column}{0.2\textwidth}
+  \includegraphics[width=\linewidth]{images/logic.png}
+\end{column}
+\begin{column}{0.8\textwidth}
+  \only<1>{\color{selectionred}} --- [Logic -- Challenging 12] I know how to find the roots. \color{black} \pause
+
+  {\color{intellect} \blackfont LOGIC} \color{gray} [Challenging: Failure] \color{black} --- You didn't think that scanning the globals and the stack would be so easy, right?
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Globals and stack}
+
+Turns out, finding the location of static memory is quite hard. There's no easy way to do it, only parsing the current ELF file and asking all of the loaded dynamic libraries.
+
+\begin{center}
+\includegraphics[width=5cm]{images/NOOO.jpg}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{The solution}
+
+\begin{columns}
+\begin{column}{0.2\textwidth}
+  \only<1>{\includegraphics[width=\linewidth]{images/authority.png}}
+  \only<2>{\includegraphics[width=\linewidth]{images/logic.png}}
+\end{column}
+\begin{column}{0.8\textwidth}
+  {\color{psyche} \blackfont AUTHORITY} \color{gray} [Trivial: Success] \color{black} --- Who cares about globals after all? Check only the registers and the stack. \pause
+
+  {\color{intellect} \blackfont LOGIC} \color{gray} [Easy: Success] \color{black} --- In GC constructor save the current rsp value as the stack base and then iterate over the whole stack, finding the roots.
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Mark phase}
+
+Mark needs two crutial things: looking into the memory behind found pointers and registering them as reachable. \pause
+
+\begin{columns}
+\begin{column}{0.2\textwidth}
+  \includegraphics[width=\linewidth]{images/physical-instrument.png}
+\end{column}
+\begin{column}{0.8\textwidth}
+  \only<2>{\color{selectionred}} --- How do I know the size of the object behind a pointer? \color{black} \pause
+
+  {\color{physique} \blackfont PHYSICAL INSTRUMENT} \color{gray} [Medium: Success] \color{black} --- The \%!@\& do you need memory for? Look at those bytes. You *must* use them. You *must* rule them. Map is the way. \pause
+
+  \only<4>{\color{selectionred}} --- Sure thing. But how do we mark the objects that are reachable? \pause
+
+  {\color{physique} \blackfont PHYSICAL INSTRUMENT} \color{gray} [Heroic: Success] \color{black} --- I'll say it again. The \%!@\& do you need memory for? Write a bitset for the whole heap.
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Sweep phase}
+
+Three lines:
+\begin{minted}{cpp}
+for (auto&& [ptr, _] : allocator.allocated) {
+  if (!reachable[...]) {
+    allocator.deallocate(ptr);
+  }
+}
+\end{minted}
+
+Just find all unreachable blocks and free them.
+\end{frame}
+
+\begin{frame}
+\frametitle{Usage}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+We overloaded global operator `new`. \pause
+
+\only<2->{That led to some funny cosequences while testing: `std::println` uses `std::format`, which, in turn, allocates a string, and its constructor is using `new`.}
+
+\only<3->{But we used `println` for logging in our allocator. We got to the point where doing literally anything with dynamic memory will cause a stack overflow.}
+\end{column}
+\begin{column}{0.5\textwidth}
+\includegraphics[width=\linewidth]{images/bearwithme.jpg}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Grand finale}
+
+\begin{center}
+\blackfont
+\huge{IT WORKS}
+\vspace{10pt}
+
+\includegraphics[width=8cm]{images/kineema.jpg}
+\end{center}
+\end{frame}
+
+\end{document}
