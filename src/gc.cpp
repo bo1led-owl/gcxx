@@ -66,6 +66,7 @@ void GC::GCollector::GC_scan() {
   GC_scan_stack(out);
   memory_dfs(to_mark);
   GC_sweep();
+  reachable.reset();
 }
 
 void* GC::GCollector::allocate(size_t size)  {
