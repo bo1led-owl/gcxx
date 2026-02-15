@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <stdexcept>
 
-#ifdef DEBUG
+#ifdef GC_DEBUG
 #define DBG_STATE()                                                           \
     {                                                                         \
         std::puts("free:");                                                   \
