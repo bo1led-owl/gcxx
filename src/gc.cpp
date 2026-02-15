@@ -137,12 +137,15 @@ void GC::GCollector::memory_dfs(m_stack& stack) {
         if (allocator.allocated.find(current) == allocator.allocated.end()) {
             continue;
         }
+        auto idx = ((char*)current - (char*)allocator.heap) / GC::Alloc::MIN_SIZE;
+        if (reachable[idx])
+            continue;
         printf("found %p\n", current);
-        reachable[((char*)current - (char*)allocator.heap) / GC::Alloc::MIN_SIZE] = true;
+        reachable[idx] = true;
         size_t block_size = allocator.allocated[current] / sizeof(void*);
-        void** block = (void**)(*(void**)current);
+        void** block = (void**)current;
         for (size_t i = 0; i < block_size; ++i) {
-            stack.push_back(block + i);
+            stack.push_back(block[i]);
         }
     }
 }
