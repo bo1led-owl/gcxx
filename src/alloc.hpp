@@ -2,25 +2,32 @@
 
 #include <cstddef>
 #include <list>
-#include <utility>
+#include <map>
 
 #include "mallocator.hpp"
 
 class Alloc {
-    using Header = std::pair<void*, size_t>;
-    using ObjectList = std::list<Header, MLC::Alloc<Header>>;
-    ObjectList free;
-    ObjectList allocated;
-
 public:
+    Alloc(size_t size_bytes);
+    ~Alloc() = default;
+
+    std::map<void*, size_t> allocated;
+
     [[nodiscard]] void* allocate(size_t size);
     void deallocate(void* p);
+    auto allocated_begin();
+    auto allocated_end();
 
-    auto allocated_begin() {
-        return allocated.begin();
-    }
+private:
+    struct Header {
+        void* addr;
+        size_t size;
+    };
+    using ObjectList = std::list<Header, MLC::Alloc<Header>>;
+    ObjectList free;
+    size_t heap_size;
+    void* heap;
 
-    auto allocated_end() {
-        return allocated.end();
-    }
+    ObjectList::iterator find(size_t size);
+    void split_if_possible(ObjectList::iterator node, size_t needed_size);
 };
