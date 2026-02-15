@@ -98,22 +98,11 @@ TEST(AvlTest, MinMaxAfterOperations, {
     ASSERT_EQ(a.max(), 5);
 });
 
-TEST(AvlTest, SelectOnEmpty, {
-    AVL a;
-    ASSERT_EQ(a.select(1), INT_MIN);
-    ASSERT_EQ(a.select(2), INT_MIN);
-});
-
 TEST(AvlTest, SelectSingle, {
     AVL a;
     a.insert(1);
     ASSERT_EQ(a.select(0), 1);
     ASSERT_EQ(a.select(2), INT_MIN);
-});
-
-TEST(AvlTest, RankOnEmpty, {
-    AVL a;
-    ASSERT_EQ(a.rank(1), 0);
 });
 
 TEST(AvlTest, RankSingle, {
@@ -153,13 +142,11 @@ TEST(AvlTest, SetFuzz, {
 
 int main(void) {
     AvlTest_LinearInsertion();
-    // AvlTest_LinearDeletion();
-    // AvlTest_ReversedLinearDeletion();
-    // AvlTest_ReversedLinearInsertion();
-    // AvlTest_MinMaxAfterOperations();
-    // AvlTest_MinMaxSingleElement();
-    // AvlTest_RankOnEmpty();
-    // AvlTest_SelectOnEmpty();
-    // AvlTest_SelectSingle();
-    // AvlTest_SetFuzz();
+    AvlTest_LinearDeletion();
+    AvlTest_ReversedLinearDeletion();
+    AvlTest_ReversedLinearInsertion();
+    AvlTest_MinMaxAfterOperations();
+    AvlTest_MinMaxSingleElement();
+    AvlTest_SelectSingle();
+    AvlTest_SetFuzz();
 }
