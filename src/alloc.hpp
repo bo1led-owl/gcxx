@@ -6,6 +6,8 @@
 
 #include "mallocator.hpp"
 
+namespace GC {
+
 class Alloc {
 public:
     Alloc(size_t size_bytes);
@@ -30,3 +32,5 @@ private:
     ObjectList::iterator find(size_t size);
     void split_if_possible(ObjectList::iterator node, size_t needed_size);
 };
+
+}  // namespace GC
