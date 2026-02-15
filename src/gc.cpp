@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "src/alloc.hpp"
+
 bool GC::initialized = false;
 GC::GCollector GC::instance{};
 
@@ -151,6 +153,8 @@ void GC::GCollector::GC_sweep() {
     while (it != allocator.allocated.end()) {
         if (!reachable[((char*)it->first - (char*)allocator.heap) / GC::Alloc::MIN_SIZE]) {
             it = allocator.deallocate(it->first);
+        } else {
+            it++;
         }
     }
 }
