@@ -49,7 +49,7 @@ void GC::GCollector::memory_dfs(m_stack& stack) {
         if (allocator.allocated.find(current) == allocator.allocated.end()) {
             continue;
         }
-        printf("found %p", current);
+        printf("found %p\n", current);
         reachable[((char*)current - (char*)allocator.heap) / GC::Alloc::MIN_SIZE] = true;
         size_t block_size = allocator.allocated[current];
         void** block = (void**)(*(void**)current);
@@ -79,7 +79,7 @@ void GC::GCollector::GC_scan() {
 void* GC::GCollector::allocate(size_t size) {
     allocations_count++;
     if (allocations_count) {
-        printf("scan start");
+        printf("scan start\n");
         GC_scan();
     }
     return allocator.allocate(size);
