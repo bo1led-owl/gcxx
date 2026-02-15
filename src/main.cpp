@@ -33,9 +33,9 @@ int main(void) {
     b->print();
     c->print();
 
+    gpa.deallocate(c);
     gpa.deallocate(a);
     gpa.deallocate(b);
-    gpa.deallocate(c);
 
     return 0;
 }
