@@ -1,14 +1,14 @@
-#include <vector>
 #include <bitset>
+#include <vector>
 
-#include "mallocator.hpp"
 #include "alloc.hpp"
+#include "mallocator.hpp"
 
 #define HEAP_SIZE 1 << 30
 #define BITSET_SIZE static_cast<size_t>(HEAP_SIZE / GC::Alloc::MIN_SIZE)
 
 namespace GC {
-  class GCollector {
+class GCollector {
     using uintptr = unsigned long;
     using uint = unsigned int;
     using m_stack = std::vector<void*, MLC::Alloc<void*>>;
@@ -18,7 +18,7 @@ namespace GC {
     void* stack_begin;
     uint allocations_count;
 
-    template<typename ItOut>
+    template <typename ItOut>
     ItOut GC_scan_registers(ItOut stack);
 
     template <typename ItOut>
@@ -30,20 +30,15 @@ namespace GC {
 
     void GC_scan();
 
-    public:
-
+public:
     GCollector() : allocator(HEAP_SIZE), allocations_count(0) {
-      stack_begin = __builtin_frame_address(0);
+        stack_begin = __builtin_frame_address(0);
     }
 
-
     void* allocate(size_t size);
-
     void deallocate(void* ptr);
+};
 
-  };
+static GCollector instance;
 
-
-  static GCollector instance;
-
-} // namespace GarbageCollector
+}  // namespace GC

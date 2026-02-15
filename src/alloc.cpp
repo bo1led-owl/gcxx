@@ -1,40 +1,32 @@
 #include "alloc.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <stdexcept>
-#include <utility>
 
-void GC::Alloc::print_state() {
-    printf("\tfree:\n");
-    for (auto block : free) {
-        printf("\t\taddr: %p\n\t\tsize: %zu\n", block.addr, block.size);
+#ifdef DEBUG
+#define DBG_STATE()                                                           \
+    {                                                                         \
+        std::puts("free:");                                                   \
+        for (auto block : free) {                                             \
+            std::printf("\taddr: %p\n\tsize: %lu\n", block.addr, block.size); \
+        }                                                                     \
+        std::puts("\tallocated:");                                            \
+        for (auto e : allocated) {                                            \
+            std::printf("\taddr: %p\n\tsize: %lu\n", e.first, e.second);      \
+        }                                                                     \
     }
-    printf("\tallocated:\n");
-    for (auto e : allocated) {
-        printf("\t\taddr: %p\n\t\tsize: %zu\n", e.first, e.second);
-    }
-}
+#else
+#define DBG_STATE() (void*)0;
+#endif
 
 GC::Alloc::Alloc(size_t size_bytes) : heap_size(size_bytes) {
     heap = std::malloc(heap_size);
-    printf("[ALLOC DBG] heap at %p\n", heap);
     free.emplace_back(Header{heap, heap_size});
 }
 
 GC::Alloc::~Alloc() {
     std::free(heap);
-}
-
-GC::Alloc::ObjectList::iterator GC::Alloc::find(size_t size) {
-    auto it = free.begin();
-    while (it != free.end()) {
-        if (it->size >= size) {
-            return it;
-        }
-        ++it;
-    }
-
-    std::unreachable();
 }
 
 /**
@@ -53,15 +45,9 @@ void GC::Alloc::split_if_possible(GC::Alloc::ObjectList::iterator node, size_t n
 
 void* GC::Alloc::allocate(size_t sz) {
     size_t size = sz + (MIN_SIZE - (sz % MIN_SIZE)) % MIN_SIZE;
-    auto block = find(size);
+    auto block = std::find_if(free.begin(), free.end(), [size](auto& x) { return x.size >= size; });
 
-    printf(
-        "[ALLOC DBG] allocating:\n\trequired size %zu\n\taligned size %zu\n\tblock address: %p\n",
-        sz,
-        size,
-        block->addr);
-
-    print_state();
+    DBG_STATE();
     if (block == free.end()) {
         return nullptr;
     }
@@ -72,22 +58,39 @@ void* GC::Alloc::allocate(size_t sz) {
     split_if_possible(block, size);
     free.erase(block);
 
-    print_state();
-    printf("\n\n\n");
+    DBG_STATE();
     return addr;
 }
 
-void GC::Alloc::deallocate(void* p) {
-    printf("[ALLOC DBG] deallocating %p\n", p);
-    print_state();
-    auto block_it = allocated.find(p);
-    printf("\tblock_it:\n\t\taddr: %p\n\t\tsize: %zu\n", block_it->first, block_it->second);
+void GC::Alloc::coalesce_with_next(GC::Alloc::ObjectList::iterator nd) {
+    if (nd == free.end()) {
+        return;
+    }
+    auto node = nd;
+    auto next = ++nd;
 
+    if (node != free.end() && next != free.end()) {
+        if ((char*)node->addr + node->size == (char*)next->addr) {
+            node->size += next->size;
+            free.erase(next);
+        }
+    }
+}
+
+void GC::Alloc::deallocate(void* p) {
+    DBG_STATE();
+
+    auto block_it = allocated.find(p);
     if (block_it == allocated.end()) {
         throw std::invalid_argument("Trying to deallocate never-allocated pointer!");
     }
 
-    free.push_back(Header{block_it->first, block_it->second});
+    auto next = std::find_if(
+        free.begin(), free.end(), [block_it](auto& block) { return block.addr > block_it->first; });
+    free.insert(next, Header{block_it->first, block_it->second});
     allocated.erase(p);
-    print_state();
+
+    coalesce_with_next(--next);
+
+    DBG_STATE();
 }

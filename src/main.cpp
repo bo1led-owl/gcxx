@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "gc_new.hpp"
 
 struct Example {
@@ -31,5 +32,4 @@ int main(void) {
     void* c = GC::instance.allocate(1000);
 
     return 0;
->>>>>>> scan
 }

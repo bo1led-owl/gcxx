@@ -8,6 +8,10 @@ lib_src = [
   'src/gc.cpp',
 ]
 
+if get_option('buildtype') == 'debug'
+    add_project_arguments('-DDEBUG', language: 'cpp')
+endif
+
 runtime = static_library('runtime', lib_src)
 
 test_src = [
