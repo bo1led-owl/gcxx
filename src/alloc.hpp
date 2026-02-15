@@ -13,7 +13,7 @@ public:
     Alloc(size_t size_bytes);
     ~Alloc();
 
-    std::map<void*, size_t> allocated;
+    std::map<void*, size_t, std::less<void*>, MLC::Alloc<std::pair<void* const, size_t>>> allocated;
     void* heap;
     static constexpr size_t MIN_SIZE = sizeof(void*) * 2;
 
