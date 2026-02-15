@@ -17,8 +17,6 @@ public:
 
     [[nodiscard]] void* allocate(size_t size);
     void deallocate(void* p);
-    auto allocated_begin();
-    auto allocated_end();
 
 private:
     struct Header {
