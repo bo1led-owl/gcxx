@@ -66,6 +66,33 @@ void* GC::Alloc::allocate(size_t sz) {
     return addr;
 }
 
+void GC::Alloc::coalesce_with_next(GC::Alloc::ObjectList::iterator nd) {
+    if (nd == free.end()) {
+        return;
+    }
+    auto node = nd;
+    auto next = ++nd;
+
+    std::println("\tcoalescing:");
+    std::println("\t\tnode:\n\t\t\taddr: {}\n\t\t\tsize: {}\n\t\t\tis end: {}",
+                 node->addr,
+                 node->size,
+                 node == free.end());
+    std::println("\t\tnext:\n\t\t\taddr: {}\n\t\t\tsize: {}\n\t\t\tis end: {}",
+                 next->addr,
+                 next->size,
+                 next == free.end());
+
+    if (node != free.end() && next != free.end()) {
+        if ((char*)node->addr + node->size == (char*)next->addr) {
+            std::println("\t\tCOALESCING");
+            node->size += next->size;
+            free.erase(next);
+        }
+    }
+    std::println("\tcoalescing end");
+}
+
 void GC::Alloc::deallocate(void* p) {
     std::println("[ALLOC DBG] deallocating {}", p);
     print_state();
@@ -78,8 +105,14 @@ void GC::Alloc::deallocate(void* p) {
         throw std::invalid_argument("Trying to deallocate never-allocated pointer!");
     }
 
-    free.push_back(Header{block_it->first, block_it->second});
+    auto next = std::find_if(
+        free.begin(), free.end(), [block_it](auto& block) { return block.addr > block_it->first; });
+
+    std::println("\tnext:\n\t\taddr: {}\n\t\tsize: {}", next->addr, next->size);
+    free.insert(next, Header{block_it->first, block_it->second});
     allocated.erase(p);
+
+    coalesce_with_next(--next);
 
     print_state();
 }

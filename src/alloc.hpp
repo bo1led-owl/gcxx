@@ -33,6 +33,6 @@ private:
     size_t heap_size;
 
     void split_if_possible(ObjectList::iterator node, size_t needed_size);
+    void coalesce_with_next(GC::Alloc::ObjectList::iterator nd);
 };
-
 }  // namespace GC
