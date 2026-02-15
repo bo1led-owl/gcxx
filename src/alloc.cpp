@@ -11,7 +11,7 @@
         for (auto block : free) {                                             \
             std::printf("\taddr: %p\n\tsize: %lu\n", block.addr, block.size); \
         }                                                                     \
-        std::puts("\tallocated:");                                            \
+        std::puts("allocated:");                                              \
         for (auto e : allocated) {                                            \
             std::printf("\taddr: %p\n\tsize: %lu\n", e.first, e.second);      \
         }                                                                     \
@@ -36,8 +36,9 @@ GC::Alloc::~Alloc() {
  * @param needed_size the minimal size node needs.
  */
 void GC::Alloc::split_if_possible(GC::Alloc::ObjectList::iterator node, size_t needed_size) {
-    if (node != free.end() && node->size > needed_size) {
-        free.push_back(Header{(char*)node->addr + needed_size, node->size - needed_size});
+    if (node != free.end() && node->size >= needed_size + GC::Alloc::MIN_SIZE) {
+        free.insert(std::next(node),
+                    Header{(char*)node->addr + needed_size, node->size - needed_size});
         node->size = needed_size;
         allocated.insert_or_assign(node->addr, node->size);
     }
