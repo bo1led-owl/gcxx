@@ -21,6 +21,10 @@ GC::Alloc::Alloc(size_t size_bytes) : heap_size(size_bytes) {
     free.emplace_back(Header{heap, heap_size});
 }
 
+GC::Alloc::~Alloc() {
+    std::free(heap);
+}
+
 GC::Alloc::ObjectList::iterator GC::Alloc::find(size_t size) {
     auto it = free.begin();
     while (it != free.end()) {

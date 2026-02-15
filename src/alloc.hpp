@@ -11,7 +11,7 @@ namespace GC {
 class Alloc {
 public:
     Alloc(size_t size_bytes);
-    ~Alloc() = default;
+    ~Alloc();
 
     std::map<void*, size_t> allocated;
     void* heap;
