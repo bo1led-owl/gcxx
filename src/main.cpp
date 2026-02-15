@@ -12,11 +12,11 @@ struct Example {
 };
 
 void memory_leak() {
-    void* bebebebebbeeb = GC::instance.allocate(sizeof(int));
+    void* bebebebebbeeb = GC::instance.allocate(502);
 }
 
 int main(void) {
-    void* a = GC::instance.allocate(502);
+    void* a = GC::instance.allocate(4);
     memory_leak();
     void* b = GC::instance.allocate(1022);
 
