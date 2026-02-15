@@ -18,7 +18,7 @@ struct Alloc {
     Alloc() noexcept = default;
 
     [[nodiscard]] pointer allocate(size_type n) {
-        return std::malloc(n * sizeof(value_type));
+        return (pointer)std::malloc(n * sizeof(value_type));
     }
 
     void deallocate(pointer p, [[maybe_unused]] size_type n) {
