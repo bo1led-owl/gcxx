@@ -4,6 +4,7 @@ project('gcxx', 'cpp', default_options : [
 ])
 
 lib_src = [
+  'src/alloc.cpp'
 ]
 
 runtime = static_library('runtime', lib_src)
