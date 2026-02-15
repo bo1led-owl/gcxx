@@ -62,24 +62,26 @@ AVL::Node* AVL::left_rotate(AVL::Node* x) {
 }
 
 AVL::Node* AVL::rebalance(AVL::Node* node) {
-    if (node) {
-        update_node_data(node);
-        int b = balance(node);
+    if (!node) {
+        return node;
+    }
 
-        if (b > 1 && balance(node->left) >= 0) {
-            return right_rotate(node);
-        }
-        if (b > 1 && balance(node->left) < 0) {
-            node->left = left_rotate(node->left);
-            return right_rotate(node);
-        }
-        if (b < -1 && balance(node->right) <= 0) {
-            return left_rotate(node);
-        }
-        if (b < 0 && balance(node->right) > 0) {
-            node->right = right_rotate(node->right);
-            return left_rotate(node);
-        }
+    update_node_data(node);
+    int b = balance(node);
+
+    if (b > 1 && balance(node->left) >= 0) {
+        return right_rotate(node);
+    }
+    if (b > 1 && balance(node->left) < 0) {
+        node->left = left_rotate(node->left);
+        return right_rotate(node);
+    }
+    if (b < -1 && balance(node->right) <= 0) {
+        return left_rotate(node);
+    }
+    if (b < 0 && balance(node->right) > 0) {
+        node->right = right_rotate(node->right);
+        return left_rotate(node);
     }
 
     return node;

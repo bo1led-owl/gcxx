@@ -2,6 +2,71 @@
 
 #include <cstdio>
 
+bool GC::initialized = false;
+GC::GCollector GC::instance{};
+
+namespace {
+void ensure_initialized() {
+    if (!GC::initialized) [[unlikely]] {
+        std::construct_at<GC::GCollector>(&GC::instance);
+    }
+}
+}  // namespace
+
+void* operator new(std::size_t size) {
+    if (size == 0)
+        size = 1;
+    ensure_initialized();
+    void* ptr = GC::instance.allocate(size);
+    if (!ptr)
+        throw std::bad_alloc{};
+
+    return ptr;
+}
+
+void operator delete(void* ptr) noexcept {
+    ensure_initialized();
+    GC::instance.deallocate(ptr);
+}
+
+void* operator new[](std::size_t size) {
+    if (size == 0)
+        size = 1;
+    ensure_initialized();
+    void* ptr = GC::instance.allocate(size);
+    if (!ptr)
+        throw std::bad_alloc{};
+
+    return ptr;
+}
+
+void operator delete[](void* ptr) noexcept {
+    ensure_initialized();
+    GC::instance.deallocate(ptr);
+}
+
+void* operator new(std::size_t size, [[maybe_unused]] const std::nothrow_t& nothrw) noexcept {
+    if (size == 0)
+        size = 1;
+    ensure_initialized();
+    void* ptr = GC::instance.allocate(size);
+    if (!ptr)
+        return nullptr;
+
+    return ptr;
+}
+
+void* operator new[](std::size_t size, [[maybe_unused]] const std::nothrow_t& nothrw) noexcept {
+    if (size == 0)
+        size = 1;
+    ensure_initialized();
+    void* ptr = GC::instance.allocate(size);
+    if (!ptr)
+        return nullptr;
+
+    return ptr;
+}
+
 #define GET_REG(name)                                   \
     ({                                                  \
         size_t v;                                       \
@@ -19,6 +84,16 @@ ItOut GC::GCollector::GC_scan_registers(ItOut stack) {
     uintptr R14 = GET_REG(r14);
     uintptr R15 = GET_REG(r15);
 
+    uintptr RAX = GET_REG(rax);
+    uintptr RCX = GET_REG(rcx);
+    uintptr RDX = GET_REG(rdx);
+    uintptr RSI = GET_REG(rsi);
+    uintptr RDI = GET_REG(rdi);
+    uintptr R8 = GET_REG(r8);
+    uintptr R9 = GET_REG(r9);
+    uintptr R10 = GET_REG(r10);
+    uintptr R11 = GET_REG(r11);
+
     *(stack++) = (void*)RBP;
     *(stack++) = (void*)RBX;
     *(stack++) = (void*)RSP;
@@ -26,12 +101,22 @@ ItOut GC::GCollector::GC_scan_registers(ItOut stack) {
     *(stack++) = (void*)R13;
     *(stack++) = (void*)R14;
     *(stack++) = (void*)R15;
+
+    *(stack++) = (void*)RAX;
+    *(stack++) = (void*)RCX;
+    *(stack++) = (void*)RDX;
+    *(stack++) = (void*)RSI;
+    *(stack++) = (void*)RDI;
+    *(stack++) = (void*)R8;
+    *(stack++) = (void*)R9;
+    *(stack++) = (void*)R10;
+    *(stack++) = (void*)R11;
     return stack;
 }
 
 template <typename ItOut>
 ItOut GC::GCollector::GC_scan_stack(ItOut stack) {
-    void* stack_end = __builtin_frame_address(0);
+    void* stack_end = (void*)GET_REG(rsp);
     void** array = static_cast<void**>(stack_begin);
 
     for (; array != stack_end; --array) {
@@ -51,7 +136,7 @@ void GC::GCollector::memory_dfs(m_stack& stack) {
         }
         printf("found %p\n", current);
         reachable[((char*)current - (char*)allocator.heap) / GC::Alloc::MIN_SIZE] = true;
-        size_t block_size = allocator.allocated[current];
+        size_t block_size = allocator.allocated[current] / sizeof(void*);
         void** block = (void**)(*(void**)current);
         for (size_t i = 0; i < block_size; ++i) {
             stack.push_back(block + i);

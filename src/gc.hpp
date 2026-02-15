@@ -8,7 +8,8 @@
 #define BITSET_SIZE static_cast<size_t>(HEAP_SIZE / GC::Alloc::MIN_SIZE)
 
 namespace GC {
-  static bool initialized = false;
+  extern bool initialized;
+
   class GCollector {
       using uintptr = unsigned long;
       using uint = unsigned int;
@@ -29,7 +30,7 @@ namespace GC {
 
       void GC_sweep();
 
-      void GC_scan();
+      void GC_run();
 
   public:
       GCollector() : allocator(HEAP_SIZE), allocations_count(0) {
@@ -41,7 +42,5 @@ namespace GC {
       void deallocate(void* ptr);
   };
 
-
-  static GCollector instance;
-
+  extern GCollector instance;
 }  // namespace GC
