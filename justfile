@@ -15,3 +15,5 @@ setup:
 setup_release:
     meson setup {{builddir}} --buildtype=release --reconfigure
 
+clean:
+    rm -rf ./{{builddir}}
