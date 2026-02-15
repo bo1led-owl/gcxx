@@ -1,5 +1,5 @@
 #include <iostream>
-#include "gc.hpp"
+#include "gc_new.hpp"
 
 struct Example {
     int* a;

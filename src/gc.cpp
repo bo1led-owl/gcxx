@@ -1,6 +1,6 @@
 #include "gc.hpp"
 
-#include <print>
+#include <cstdio>
 
 #define GET_REG(name) \
     ({ size_t v; asm volatile ("movq %%" #name ", %0" : "=r"(v)); v; })
@@ -31,8 +31,6 @@ ItOut GC::GCollector::GC_scan_stack(ItOut stack) {
   void* stack_end = __builtin_frame_address(0);
   void** array = static_cast<void**>(stack_begin);
 
-  //std::println("from {} to {}", stack_begin, stack_end);
-
   for(; array != stack_end; --array) {
     *(stack++) = *array;
   }
@@ -46,7 +44,7 @@ void GC::GCollector::memory_dfs(m_stack& stack) {
     stack.pop_back();
 
     if (allocator.allocated.find(current) == allocator.allocated.end()) { continue; }
-    std::println("found {}", current);
+    printf("found %p", current);
     reachable[((char*)current - (char*)allocator.heap) / GC::Alloc::MIN_SIZE] = true;
     size_t block_size = allocator.allocated[current];
     void** block = (void**) (*(void**)current);
@@ -73,7 +71,7 @@ void GC::GCollector::GC_scan() {
 void* GC::GCollector::allocate(size_t size)  {
   allocations_count++;
   if (allocations_count) { 
-    std::println("start scan with call for {} size", size);
+    printf("scan start");
     GC_scan(); 
   }
   return allocator.allocate(size);

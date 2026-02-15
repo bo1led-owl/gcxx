@@ -1,23 +1,23 @@
 #include "alloc.hpp"
 
-#include <print>
+#include <cstdio>
 #include <stdexcept>
 #include <utility>
 
 void GC::Alloc::print_state() {
-    std::println("\tfree:");
+    printf("\tfree:");
     for (auto block : free) {
-        std::println("\t\taddr: {}\n\t\tsize: {}", block.addr, block.size);
+        printf("\t\taddr: %p\n\t\tsize: %zu", block.addr, block.size);
     }
-    std::println("\tallocated:");
+    printf("\tallocated:");
     for (auto e : allocated) {
-        std::println("\t\taddr: {}\n\t\tsize: {}", e.first, e.second);
+        printf("\t\taddr: %p\n\t\tsize: %zu", e.first, e.second);
     }
 }
 
 GC::Alloc::Alloc(size_t size_bytes) : heap_size(size_bytes) {
     heap = std::malloc(heap_size);
-    std::println("[ALLOC DBG] heap at {}", heap);
+    printf("[ALLOC DBG] heap at %p", heap);
     free.emplace_back(Header{heap, heap_size});
 }
 
@@ -55,8 +55,8 @@ void* GC::Alloc::allocate(size_t sz) {
     size_t size = sz + (MIN_SIZE - (sz % MIN_SIZE)) % MIN_SIZE;
     auto block = find(size);
 
-    std::println(
-        "[ALLOC DBG] allocating:\n\trequired size {}\n\taligned size {}\n\tblock address: {}",
+    printf(
+        "[ALLOC DBG] allocating:\n\trequired size %zu\n\taligned size %zu\n\tblock address: %p",
         sz,
         size,
         block->addr);
@@ -73,15 +73,15 @@ void* GC::Alloc::allocate(size_t sz) {
     free.erase(block);
 
     print_state();
-    std::println("\n\n");
+    printf("\n\n");
     return addr;
 }
 
 void GC::Alloc::deallocate(void* p) {
-    std::println("[ALLOC DBG] deallocating {}", p);
+    printf("[ALLOC DBG] deallocating %p", p);
     print_state();
     auto block_it = allocated.find(p);
-    std::println("\tblock_it:\n\t\taddr: {}\n\t\tsize: {}", block_it->first, block_it->second);
+    printf("\tblock_it:\n\t\taddr: %p\n\t\tsize: %zu", block_it->first, block_it->second);
 
     if (block_it == allocated.end()) {
         throw std::invalid_argument("Trying to deallocate never-allocated pointer!");
