@@ -1,6 +1,7 @@
 \documentclass[xcolor=dvipsnames,aspectratio=169]{beamer}
 
 \usepackage{cmap}
+\usepackage{rotating}
 \usepackage{minted}
 \usepackage{amsthm}
 \usepackage{amssymb}
@@ -8,6 +9,7 @@
 \usepackage{mathtools}
 \usepackage{svg}
 \usepackage{tikz}
+\usepackage[outline]{contour}
 
 \definecolor{bgcolor}{RGB}{20, 19, 17}
 
@@ -22,13 +24,32 @@
 \definecolor{physique}{RGB}{132, 41, 54}
 \definecolor{motorics}{RGB}{203, 163, 60}
 
+\definecolor{title-outline}{RGB}{80, 218, 185}
+\definecolor{subtitle-bg}{RGB}{249, 82, 39}
+
 \usepackage{fontspec}
 \setmainfont{Dobra-Medium}
 \setsansfont{Dobra-Medium}
 
 \newfontfamily\blackfont{Dobra-Black}
 
-\title{\blackfont GCXX}
+\setbeamertemplate{title page}{
+  \begin{center}
+      \fcolorbox{black}{black}{
+        \contour{title-outline}{
+          \color{white}
+            \blackfont{\fontsize{40}{50}\selectfont \uppercase{conservative gc}}
+        }
+      }
+
+      \fcolorbox{subtitle-bg}{subtitle-bg}{
+          \color{white}
+            \blackfont{\fontsize{15}{25}\selectfont \uppercase{the final segfault}}
+      }
+  \end{center}
+} 
+
+\title{}
 \date{}
 
 \begin{document}
@@ -36,6 +57,7 @@
 \addtocounter{framenumber}{-1}
 {
 \setbeamertemplate{footline}{} 
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{images/front-page.jpg}}
 \frame{\titlepage}
 }
 
@@ -102,11 +124,14 @@ Search begins with GC roots, i.e.
 \begin{frame}
 \frametitle{Globals and stack}
 
+\begin{columns}
+\begin{column}{0.5\textwidth}
 Turns out, finding the location of static memory is quite hard. There's no easy way to do it, only parsing the current ELF file and asking all of the loaded dynamic libraries.
-
-\begin{center}
-\includegraphics[width=5cm]{images/NOOO.jpg}
-\end{center}
+\end{column}
+\begin{column}{0.5\textwidth}
+\includegraphics[width=\linewidth]{images/NOOO.jpg}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}
@@ -183,11 +208,39 @@ We overloaded global operator `new`. \pause
 
 \begin{center}
 \blackfont
-\huge{IT WORKS}
+\huge{IT WORKS (kinda)}
 \vspace{10pt}
 
 \includegraphics[width=8cm]{images/kineema.jpg}
 \end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Harsh reality}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\only<1->{We plugged in an AVL tree for testing and got all sorts of undefined behaivour.}
+\only<2->{We fixed some UB. We saw some strange register shuffling. We saw the explosion of GoogleTest.}
+\end{column}
+\begin{column}{0.5\textwidth}
+\includegraphics[width=\linewidth]{images/lockin.jpg}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Not so grand finale}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\only<1->{We messed something up with scanning. Probably registers.}
+\only<2->{Now we get a deterministic invalid behaivour.}
+\end{column}
+\begin{column}{0.5\textwidth}
+\includegraphics[width=\linewidth]{images/soul.jpg}
+\end{column}
+\end{columns}
 \end{frame}
 
 \end{document}
